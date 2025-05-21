@@ -1,5 +1,6 @@
 //Here I list the styles for the aerodromes/airfields
 export const markerSizes = {
+    smallest: 3,
     small: 5,
     medium: 8,
     large: 12

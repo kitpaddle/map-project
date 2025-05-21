@@ -30,8 +30,10 @@
       <h3 class="section-title">Marker Tools</h3>
       <div class="marker-grid">
         <button v-for="(config, type) in markerTypes" :key="type"
-          :class="['marker-button', { active: selectedMarkerType === type }]" @click="toggleMarkerTool(type)">
-          {{ config.label }}
+          :class="['marker-button', { active: selectedMarkerType === type, 'icon-button': !!config.icon }]"
+          @click="toggleMarkerTool(type)">
+          <img v-if="config.icon" :src="config.icon" :alt="config.label" />
+          <span v-else>{{ config.label }}</span>
         </button>
       </div>
     </div>
@@ -118,7 +120,7 @@ button:hover {
   background-color: #ac8132;
 }
 
-/* Grid of layer buttons */
+/* Grid of layer buttons for the layers */
 .layer-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -140,9 +142,10 @@ button:hover {
   background-color: #ac8132;;
 }
 
+/* Grid of marker buttons for the icons*/
 .marker-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
 }
 
@@ -162,6 +165,19 @@ button:hover {
 .marker-button.active {
   background-color: #d2691e;
   /* dark orange */
+}
+
+.marker-button.icon-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.marker-button.icon-button img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 2px black);
 }
 
 </style>

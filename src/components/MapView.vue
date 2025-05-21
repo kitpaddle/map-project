@@ -106,12 +106,25 @@ export default {
       const config = markerConfig[this.selectedMarkerType]
       if (!config) return
 
-      const marker = L.circleMarker(e.latlng, {
-        radius: 8,
-        color: config.color,
-        fillColor: config.color,
-        fillOpacity: 1
-      })
+      let marker
+
+      if (config.icon) {
+        const icon = L.icon({
+          iconUrl: config.icon,
+          iconSize: [40, 40],
+          iconAnchor: [20, 20], // center the icon
+          popupAnchor: [0, -20]
+        })
+
+        marker = L.marker(e.latlng, { icon })
+      } else {
+        marker = L.circleMarker(e.latlng, {
+          radius: 8,
+          color: config.color,
+          fillColor: config.color,
+          fillOpacity: 1
+        })
+      }
 
       marker.on('click', (evt) => {
         L.DomEvent.stopPropagation(evt)

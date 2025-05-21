@@ -15,7 +15,7 @@ export default {
         }
     },
     seaborder: {
-        label: 'Sjö-Gräns',
+        label: 'Sjögräns',
         popupEnabled: false,
         url: 'https://daim.lfv.se/geoserver/wfs?service=WFS&&version=1.1.0&request=GetFeature&typename=DAIM_TOPO:Terrvattengrans&outputFormat=application/json&srsname=EPSG:4326',
         style: {
@@ -34,7 +34,7 @@ export default {
         },
         pointToLayer: (feature, latlng) => {
             return L.circleMarker(latlng, {
-                radius: markerSizes.medium,
+                radius: markerSizes.small,
                 color: markerColors.gray,
                 fillColor: markerColors.gray,
                 fillOpacity: 1
@@ -50,7 +50,7 @@ export default {
         },
         pointToLayer: (feature, latlng) => {
             return L.circleMarker(latlng, {
-                radius: markerSizes.small,
+                radius: markerSizes.smallest,
                 color: markerColors.gray,
                 fillColor: markerColors.gray,
                 fillOpacity: 1
