@@ -5,6 +5,7 @@
 <script>
 import layerConfig from '../layerConfig.js'
 import markerConfig from '../markerConfig.js'
+import { markerSizes, markerColors } from '../markerStyleConfig.js'
 import L from 'leaflet'
 import 'leaflet-draw'
 
@@ -57,7 +58,18 @@ export default {
       fetch(config.url)
         .then(res => res.json())
         .then(geojson => {
-          const layer = L.geoJSON(geojson, config)
+          
+          const options = { ...config }
+
+          // Conditionally attach popup logic
+          if (config.popupEnabled) {
+            options.onEachFeature = (feature, leafletLayer) => {
+              this.attachAirportPopup(feature, leafletLayer)
+            }
+          }
+
+          const layer = L.geoJSON(geojson, options)
+
           this.dataLayers[name] = layer
           console.log(`Loaded layer ${name}`, layer) // Log of layer loaded
           // Optional: layer.addTo(this.map) if you want it visible by default
@@ -113,6 +125,19 @@ export default {
     this.$nextTick(() => this.map.invalidateSize())
   },
   methods: {
+    updateMarkerStyle(layer, size, colorKey) {
+      const radius = markerSizes[size] || markerSizes.medium
+      const color = markerColors[colorKey] || markerColors.gray
+
+      layer.setStyle({
+        radius,
+        color,
+        fillColor: color,
+        fillOpacity: 1
+      })
+
+      layer._markerStyle = { size, color: colorKey }
+    },
     setLayerVisibility(name, visible) {
       const layer = this.dataLayers[name]
       console.log('Toggle request:', name, visible, layer) // Log of layer toggled
@@ -125,6 +150,71 @@ export default {
       } else {
         this.map.removeLayer(layer)
       }
+    },
+    attachAirportPopup(feature, layer) {
+      const code = feature.properties.POSITIONINDICATOR || 'Unknown'
+      const loc = feature.properties.LOCATION || 'Unnamed'
+
+      //layer._markerStyle = { size: 'medium', color: 'gray' }
+
+      const colorButtons = Object.entries(markerColors).map(([key, hex]) => {
+        return `<span class="circle-option" data-color="${key}" style="background-color:${hex};"></span>`
+      }).join('')
+
+      const sizeButtons = Object.entries(markerSizes).map(([key, radius]) => {
+        const px = radius * 2
+        return `<span class="circle-option" data-size="${key}" style="width:${px}px;height:${px}px;"></span>`
+      }).join('')
+
+      const popupHTML = `
+        <div>
+          <strong>${code} - ${loc}</strong><br/>
+          <div style="margin-top: 6px;">Size: ${sizeButtons}</div>
+          <div style="margin-top: 6px;">Color: ${colorButtons}</div>
+        </div>
+      `
+
+
+      layer.bindTooltip(`${code} - ${loc}`, {
+        direction: 'top',
+        offset: [0, -5]
+      })
+
+      layer.bindPopup(popupHTML)
+
+      layer.on('popupopen', (e) => {
+        const popupEl = e.popup.getElement()
+        if (!popupEl) return
+
+        // Size buttons
+        popupEl.querySelectorAll('.circle-option[data-size]').forEach(el => {
+          el.style.display = 'inline-block'
+          el.style.margin = '0 4px'
+          el.style.borderRadius = '50%'
+          el.style.backgroundColor = '#ccc'
+          el.style.cursor = 'pointer'
+          el.addEventListener('click', () => {
+            const size = el.getAttribute('data-size')
+            this.updateMarkerStyle(layer, size, layer._markerStyle?.color || 'gray')
+            layer._markerStyle.size = size
+          })
+        })
+
+        // Color buttons
+        popupEl.querySelectorAll('.circle-option[data-color]').forEach(el => {
+          el.style.display = 'inline-block'
+          el.style.width = '16px'
+          el.style.height = '16px'
+          el.style.margin = '0 4px'
+          el.style.borderRadius = '50%'
+          el.style.cursor = 'pointer'
+          el.addEventListener('click', () => {
+            const color = el.getAttribute('data-color')
+            this.updateMarkerStyle(layer, layer._markerStyle?.size || 'medium', color)
+            layer._markerStyle.color = color
+          })
+        })
+      })
     }
   }
 

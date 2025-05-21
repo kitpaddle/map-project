@@ -1,3 +1,4 @@
+// Here I list the buttons and their respective colors for the map
 export default {
     tank: {
         label: 'Tank',
