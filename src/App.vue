@@ -64,6 +64,7 @@ html, body, #app {
   box-sizing: border-box;
   overflow-y: auto;
   height: 100%;
+  background-color: #1e1e1e;
 }
 
 .map-wrapper {
@@ -74,7 +75,6 @@ html, body, #app {
 .sidebar-header {
   text-align: center;
   padding: 20px 10px;
-  background-color: #1e1e1e;
   color: white;
   border-bottom: 1px solid #444;
 }
