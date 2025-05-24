@@ -82,8 +82,6 @@ export default {
       this.$emit('toggleDrawTool', tool === this.activeDrawTool ? null : tool)
     }
   }
-
-
 }
 </script>
 
@@ -129,6 +127,7 @@ button:hover {
 }
 
 .radio-button {
+  font-size: 13px;
   width: 100%;
   padding: 2px;
   background-color: #333;
@@ -151,8 +150,8 @@ button:hover {
 }
 
 .layer-button {
+  font-size: 13px;
   padding: 10px;
-  font-weight: bold;
   background-color: #333;
   color: white;
   border: none;
@@ -219,7 +218,7 @@ button:hover {
   color: white;
   border: none;
   border-radius: 4px;
-  font-weight: bold;
+  font-size: 13px;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
