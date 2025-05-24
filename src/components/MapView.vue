@@ -8,16 +8,23 @@ import markerConfig from '../markerConfig.js'
 import { markerSizes, markerColors } from '../markerStyleConfig.js'
 import L from 'leaflet'
 import 'leaflet-draw'
+import { defineExpose } from 'vue'
 
 export default {
-  props: ['selectedBaseLayer', 'selectedMarkerType'],
+  props: ['selectedBaseLayer', 'selectedMarkerType', 'shapeColor'],
   data() {
     return {
       map: null,
       layers: {},
       currentBaseLayer: null,
       dataLayers: {}, // for GeoJSON layers
-      markerLayerGroup: null // layer containing all the amrkers
+      markerLayerGroup: null, // layer containing all the amrkers
+      drawHandlers: {
+        polygon: null,
+        edit: null,
+        delete: null
+      },
+      activeDrawMode: null
     }
   },
   watch: {
@@ -27,6 +34,16 @@ export default {
       }
       this.currentBaseLayer = this.layers[newLayer]
       this.currentBaseLayer.addTo(this.map)
+    },
+    shapeColor(newColor) {
+      if (this.drawHandlers.polygon) {
+        this.drawHandlers.polygon.setOptions({
+          shapeOptions: {
+            color: newColor,
+            weight: 2
+          }
+        })
+      }
     }
   },
   mounted() {
@@ -80,22 +97,41 @@ export default {
     const drawnItems = new L.FeatureGroup()
     this.map.addLayer(drawnItems)
 
-    const drawControl = new L.Control.Draw({
-      edit: { featureGroup: drawnItems },
-      draw: {
-        polygon: true,
-        rectangle: true,
-        marker: true,
-        circle: false,
-        polyline: false
+    this.drawHandlers.polygon = new L.Draw.Polygon(this.map, {
+      allowIntersection: false,
+      showArea: false,
+      shapeOptions: {
+        color: this.shapeColor,
+        weight: 2
       }
+    })
+
+    this.drawHandlers.edit = new L.EditToolbar.Edit(this.map, {
+      featureGroup: drawnItems
+    })
+
+    this.drawHandlers.delete = new L.EditToolbar.Delete(this.map, {
+      featureGroup: drawnItems
+    })
+
+    const drawControl = new L.Control.Draw({
+      edit: { 
+        featureGroup: drawnItems,
+        edit: false,
+        remove: false
+      },
+      draw: false
     })
 
     this.map.addControl(drawControl)
 
     this.map.on(L.Draw.Event.CREATED, (e) => {
       drawnItems.addLayer(e.layer)
+
+      // Automatically deactivate the draw tool in parent component
+      this.$emit('draw-finished')
     })
+
 
     // On Click listener to add Markers/Icons on map
     this.map.on('click', (e) => {
@@ -228,6 +264,40 @@ export default {
           })
         })
       })
+    },
+    startDrawPolygon() {
+      this.stopActiveDrawMode()
+      this.drawHandlers.polygon.enable()
+      this.activeDrawMode = 'draw'
+    },
+
+    startEditShapes() {
+      if (this.activeDrawMode === 'edit') {
+        this.drawHandlers.edit.disable()
+        this.activeDrawMode = null
+      } else {
+        this.stopActiveDrawMode()
+        this.drawHandlers.edit.enable()
+        this.activeDrawMode = 'edit'
+      }
+    },
+
+    startDeleteShapes() {
+      if (this.activeDrawMode === 'delete') {
+        this.drawHandlers.delete.disable()
+        this.activeDrawMode = null
+      } else {
+        this.stopActiveDrawMode()
+        this.drawHandlers.delete.enable()
+        this.activeDrawMode = 'delete'
+      }
+    },
+
+    stopActiveDrawMode() {
+      if (this.activeDrawMode === 'draw') this.drawHandlers.polygon.disable()
+      else if (this.activeDrawMode === 'edit') this.drawHandlers.edit.disable()
+      else if (this.activeDrawMode === 'delete') this.drawHandlers.delete.disable()
+      this.activeDrawMode = null
     }
   }
 

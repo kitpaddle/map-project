@@ -12,3 +12,12 @@ export const markerColors = {
     yellow: '#FFD700',
     red: '#F44336'
 }
+
+// Color options for drawn shapes
+export const shapeColors = [
+    '#ffcc80', // light orange
+    '#80d8ff', // light blue
+    '#b9f6ca', // light green
+    '#ff8a80'  // light red
+]
+  

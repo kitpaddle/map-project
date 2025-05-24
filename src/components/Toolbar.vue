@@ -37,7 +37,26 @@
         </button>
       </div>
     </div>
+
+    <!-- Drawing Tools Section -->
+    <div class="toolbar-section">
+      <h3 class="section-title">Drawing Shapes</h3>
+      <div class="draw-buttons-row">
+        <button :class="{ active: activeDrawTool === 'draw' }"
+          @click="$emit('toggleDrawTool', activeDrawTool === 'draw' ? null : 'draw')">Draw</button>
+
+        <button :class="{ active: activeDrawTool === 'edit' }"
+          @click="$emit('toggleDrawTool', activeDrawTool === 'edit' ? null : 'edit')">Edit</button>
+
+        <button :class="{ active: activeDrawTool === 'delete' }"
+          @click="$emit('toggleDrawTool', activeDrawTool === 'delete' ? null : 'delete')">Delete</button>
+
+        <button :style="{ backgroundColor: activeShapeColor + '33' }" @click="$emit('cycleShapeColor')">Color</button>
+      </div>
+    </div>
+
   </div>
+
 </template>
 
 
@@ -46,8 +65,8 @@ import layerConfig from '../layerConfig.js'
 import markerConfig from '../markerConfig.js'
 
 export default {
-  props: ['selectedBaseLayer', 'layerStates', 'selectedMarkerType'],
-  emits: ['changeLayer', 'toggleLayer', 'toggleMarkerTool'],
+  props: ['selectedBaseLayer', 'layerStates', 'selectedMarkerType', 'activeDrawTool', 'activeShapeColor'],
+  emits: ['changeLayer', 'toggleLayer', 'toggleMarkerTool', 'toggleDrawTool', 'cycleShapeColor'],
   data() {
     return {
       layerConfig,
@@ -58,8 +77,12 @@ export default {
     toggleMarkerTool(type) {
       const newType = this.selectedMarkerType === type ? null : type
       this.$emit('toggleMarkerTool', newType)
+    },
+    handleDrawToggle(tool) {
+      this.$emit('toggleDrawTool', tool === this.activeDrawTool ? null : tool)
     }
   }
+
 
 }
 </script>
@@ -180,4 +203,32 @@ button:hover {
   filter: drop-shadow(0 0 2px black);
 }
 
+/* Draw buttons */
+.draw-buttons-row {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.draw-buttons-row button {
+  flex: 1;
+  padding: 8px;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.draw-buttons-row button.active {
+  background-color: #ac8132;
+}
+
+.draw-buttons-row button:hover {
+  background-color: #444;
+}
 </style>
