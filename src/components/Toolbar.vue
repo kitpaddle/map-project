@@ -51,7 +51,7 @@
         <button :class="{ active: activeDrawTool === 'delete' }"
           @click="$emit('toggleDrawTool', activeDrawTool === 'delete' ? null : 'delete')">Delete</button>
 
-        <button :style="{ backgroundColor: activeShapeColor + '33' }" @click="$emit('cycleShapeColor')">Color</button>
+        <button :style="{ backgroundColor: activeShapeColor + '60' }" @click="$emit('cycleShapeColor')">Color</button>
       </div>
     </div>
 
@@ -185,7 +185,7 @@ button:hover {
 }
 
 .marker-button.active {
-  background-color: #d2691e;
+  background-color: #ac8132;
   /* dark orange */
 }
 
