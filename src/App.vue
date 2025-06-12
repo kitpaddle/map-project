@@ -28,7 +28,7 @@ export default {
   components: { Toolbar, MapView },
   data() {
     return {
-      selectedBaseLayer: 'whitemap', // sets the intial Base Layer
+      selectedBaseLayer: 'localtiles', // sets the intial Base Layer
       // Contains the layers and if they are shown or not
       layerStates: {
         layerFIR: false,

@@ -61,6 +61,11 @@ export default {
         maxZoom: 17,
         minZoom: 5,
         attribution: '&copy; <a href="https://carto.com/">CartoDB</a> & <a href="https://www.openstreetmap.org/copyright">OSM</a> kitpaddle'
+      }),
+      localtiles: L.tileLayer('/tiles/{z}/{x}/{y}.png', {
+        minZoom: 4,
+        maxZoom: 8,
+        attribution: 'Local tiles'
       })
     }
 
@@ -69,6 +74,7 @@ export default {
 
     // Setting current base layer
     this.currentBaseLayer = this.layers[this.selectedBaseLayer].addTo(this.map)
+    //this.currentBaseLayer = this.layers[localtiles].addTo(this.map)
 
     // Fetching all the data layers lsited in the config file from DAIM server
     for (const [name, config] of Object.entries(layerConfig)) {
@@ -135,6 +141,10 @@ export default {
 
     // On Click listener to add Markers/Icons on map
     this.map.on('click', (e) => {
+
+      // Temp code to see coordinates
+      console.log('Clicked coordinates:', e.latlng.lat.toFixed(6), e.latlng.lng.toFixed(6))
+
       if (!this.selectedMarkerType) return
 
       console.log('Map clicked. Marker type:', this.selectedMarkerType)
@@ -170,8 +180,15 @@ export default {
       marker.addTo(this.markerLayerGroup)
     })
 
-
     this.$nextTick(() => this.map.invalidateSize())
+
+    // Temp printout of zoom level
+    console.log('Initial zoom level:', this.map.getZoom())
+    this.map.on('zoomend', () => {
+      console.log('Current zoom level:', this.map.getZoom())
+    })
+
+
   },
   methods: {
     updateMarkerStyle(layer, size, colorKey) {
