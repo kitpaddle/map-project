@@ -3,15 +3,20 @@
 </template>
 
 <script>
+import { useMapStore } from '../stores/mapStore'
 import layerConfig from '../layerConfig.js'
 import markerConfig from '../markerConfig.js'
 import { markerSizes, markerColors } from '../markerStyleConfig.js'
 import L from 'leaflet'
 import 'leaflet-draw'
-import { defineExpose } from 'vue'
+import { watch } from 'vue'
 
 export default {
-  props: ['selectedMarkerType', 'shapeColor'],
+  setup(){
+    const store = useMapStore()
+    return { store }
+  },
+
   data() {
     return {
       map: null,
@@ -24,18 +29,6 @@ export default {
         delete: null
       },
       activeDrawMode: null
-    }
-  },
-  watch: {
-    shapeColor(newColor) {
-      if (this.drawHandlers.polygon) {
-        this.drawHandlers.polygon.setOptions({
-          shapeOptions: {
-            color: newColor,
-            weight: 2
-          }
-        })
-      }
     }
   },
   mounted() {
@@ -86,6 +79,7 @@ export default {
         .catch(err => console.error(`Error loading ${name}:`, err))
     }
 
+    /* ---- DRAW PLUGINS & MARKER LOGIC ---- */
     const drawnItems = new L.FeatureGroup()
     this.map.addLayer(drawnItems)
 
@@ -93,7 +87,7 @@ export default {
       allowIntersection: false,
       showArea: false,
       shapeOptions: {
-        color: this.shapeColor,
+        color: this.store.shapeColor,
         weight: 2
       }
     })
@@ -120,8 +114,8 @@ export default {
     this.map.on(L.Draw.Event.CREATED, (e) => {
       drawnItems.addLayer(e.layer)
 
-      // Automatically deactivate the draw tool in parent component
-      this.$emit('draw-finished')
+      // Reset activeDrawTool in the store so Draw button toggles off
+      this.store.setDrawTool(null)
     })
 
 
@@ -131,11 +125,11 @@ export default {
       // Temp code to see coordinates
       console.log('Clicked coordinates:', e.latlng.lat.toFixed(6), e.latlng.lng.toFixed(6))
 
-      if (!this.selectedMarkerType) return
+      if (!this.store.selectedMarkerType) return
 
-      console.log('Map clicked. Marker type:', this.selectedMarkerType)
+      console.log('Map clicked. Marker type:', this.store.selectedMarkerType)
 
-      const config = markerConfig[this.selectedMarkerType]
+      const config = markerConfig[this.store.selectedMarkerType]
       if (!config) return
 
       let marker
@@ -174,6 +168,53 @@ export default {
       console.log('Current zoom level:', this.map.getZoom())
     })
 
+      /* ---- WATCHING PINIA STATE ---- */
+      // The Map Layers from Map Layers Section
+      watch(
+      () => this.store.layers,               // source
+      (val) => {
+        for (const [name, visible] of Object.entries(val)) {
+          this.setLayerVisibility(name, visible)
+        }
+      },
+      { deep: true, immediate: true }
+    )
+
+    // The  draw / edit / delete tool Section
+    watch(
+      () => this.store.activeDrawTool,
+      (tool) => {
+        this.stopActiveDrawMode()
+        if (tool === 'draw')   this.startDrawPolygon()
+        if (tool === 'edit')   this.startEditShapes()
+        if (tool === 'delete') this.startDeleteShapes()
+      },
+      { immediate: true }
+    )
+
+    watch(
+      () => this.store.drawColor,
+      (c) => {
+        // ① Update the handler’s shape options
+        if (this.drawHandlers.polygon) {
+          this.drawHandlers.polygon.setOptions({
+            shapeOptions: {
+              color: c,        // stroke
+              fillColor: c,    // interior
+              weight: 2,
+              fillOpacity: 0.4 // or whatever you like
+            }
+          })
+        }
+
+        // ② If we’re currently in Draw mode, restart it so new shapes use the colour
+        if (this.activeDrawMode === 'draw') {
+          this.drawHandlers.polygon.disable()
+          this.drawHandlers.polygon.enable()
+        }
+      },
+      { immediate: true }
+    )
 
   },
   methods: {

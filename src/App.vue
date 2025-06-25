@@ -1,84 +1,21 @@
 <template>
   <div class="container">
     <div class="map-wrapper">
-      <MapView ref="mapView" :selectedBaseLayer="selectedBaseLayer" :selectedMarkerType="selectedMarkerType"
-        :shapeColor="currentShapeColor" @draw-finished="handlerDrawFinished" />
+      <MapView ref="mapView" :shapeColor="currentShapeColor" />
     </div>
     <div class="sidebar">
-      <div class="sidebar-header">
-        <h1 class="main-title">LFV - SAM</h1>
-        <h2 class="sub-title">Situational Awareness Map</h2>
-      </div>
-      <Toolbar :selectedBaseLayer="selectedBaseLayer" :layerStates="layerStates"
-        :selectedMarkerType="selectedMarkerType" :activeDrawTool="activeDrawTool" :activeShapeColor="currentShapeColor"
-        @changeLayer="selectedBaseLayer = $event" @toggleLayer="toggleLayer" @toggleMarkerTool="toggleMarkerTool"
-        @toggleDrawTool="toggleDrawTool" @cycleShapeColor="cycleShapeColor" />
+      <Sidebar :activeShapeColor="currentShapeColor" />
     </div>
   </div>
 </template>
 
 
 <script>
-import Toolbar from './components/Toolbar.vue'
+import Sidebar from './components/Sidebar.vue'
 import MapView from './components/MapView.vue'
-import { shapeColors } from './markerStyleConfig.js'
-
 
 export default {
-  components: { Toolbar, MapView },
-  data() {
-    return {
-      selectedBaseLayer: 'localtiles', // sets the intial Base Layer
-      // Contains the layers and if they are shown or not
-      layerStates: {
-        layerFIR: false,
-        airspaces: false
-      },
-      selectedMarkerType: null,  // Sets the selected marker type, null as default
-      activeDrawTool: null, // Track the active drawing tool
-      currentShapeColorIndex: 0 // Track what colors the shape draws
-    }
-  },
-  computed: {
-    currentShapeColor() {
-      return shapeColors[this.currentShapeColorIndex]
-    }
-  },
-  methods: {
-    toggleLayer(name) {
-      this.layerStates[name] = !this.layerStates[name]
-      this.$refs.mapView.setLayerVisibility(name, this.layerStates[name])
-    },
-    toggleMarkerTool(type) {
-    this.selectedMarkerType = type
-    },
-    toggleDrawTool(tool) {
-      const mapView = this.$refs.mapView
-      if (!mapView) return
-
-      if (tool === null) {
-        // Always stop active tool when toggling off
-        mapView.stopActiveDrawMode()
-        this.activeDrawTool = null
-        return
-      }
-
-      // Otherwise, switching tools
-      mapView.stopActiveDrawMode()
-      this.activeDrawTool = tool
-      if (tool === 'draw') mapView.startDrawPolygon()
-      else if (tool === 'edit') mapView.startEditShapes()
-      else if (tool === 'delete') mapView.startDeleteShapes()
-    },
-    
-    handlerDrawFinished() {
-      this.activeDrawTool = null
-    },
-    cycleShapeColor() {
-      this.currentShapeColorIndex = (this.currentShapeColorIndex + 1) % shapeColors.length
-    }
-
-  }
+  components: { Sidebar, MapView },
 }
 </script>
 

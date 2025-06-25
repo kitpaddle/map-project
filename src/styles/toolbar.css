@@ -1,0 +1,29 @@
+/* -------- Base look for all sidebar / toolbar buttons -------- */
+.toolbar-btn {
+    font-size: 13px;
+    padding: 8px 10px;
+    background: #333;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* hover glow */
+.toolbar-btn:hover {
+    box-shadow: 0 0 4px #d2691e;
+}
+
+/* active (selected) state */
+.toolbar-btn.active {
+    background: #ac8132;
+}
+
+/* ----------- remove glow when a button is toggled off ---------- */
+.toolbar-btn:not(.active):focus,
+.toolbar-btn:not(.active):hover,
+.toolbar-btn:not(.active):focus-visible {
+    box-shadow: none;
+    outline: none;
+}
