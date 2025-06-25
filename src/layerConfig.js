@@ -5,7 +5,6 @@ const includedAerodromes = ['ESSA', 'ESSB', 'ESNQ', 'ESPE', 'ESPA', 'ESNS', 'ESN
 export default {
     layerFIR: {
         label: 'FIR',
-        popupEnabled: false,
         url: 'https://daim.lfv.se/geoserver/wfs?service=WFS&&version=1.1.0&request=GetFeature&typename=mais:FIR&outputFormat=application/json&srsname=EPSG:4326',
         style: {
             color: 'red',
@@ -16,7 +15,6 @@ export default {
     },
     seaborder: {
         label: 'Sjögräns',
-        popupEnabled: false,
         url: 'https://daim.lfv.se/geoserver/wfs?service=WFS&&version=1.1.0&request=GetFeature&typename=DAIM_TOPO:Terrvattengrans&outputFormat=application/json&srsname=EPSG:4326',
         style: {
             color: 'blue',
@@ -24,10 +22,10 @@ export default {
             fill: false,
             opacity: 0.6
         }
-    },
+    }
+    /*
     airports: {
         label: 'Flygplatser',
-        popupEnabled: true,
         url: 'https://daim.lfv.se/geoserver/wfs?service=WFS&&version=1.1.0&request=GetFeature&typename=mais:ARP&outputFormat=application/json&srsname=EPSG:4326',
         filter: (feature) => {
             return includedAerodromes.includes(feature.properties.POSITIONINDICATOR)
@@ -43,7 +41,6 @@ export default {
     },
     aerodromes: {
         label: 'Flygfält',
-        popupEnabled: true,
         url: 'https://daim.lfv.se/geoserver/wfs?service=WFS&&version=1.1.0&request=GetFeature&typename=mais:ARP&outputFormat=application/json&srsname=EPSG:4326',
         filter: (feature) => {
             return !includedAerodromes.includes(feature.properties.POSITIONINDICATOR)
@@ -56,5 +53,5 @@ export default {
                 fillOpacity: 1
             })
         }
-    }
+    }*/
 }

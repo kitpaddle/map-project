@@ -1,6 +1,6 @@
 <template>
   <div class="toolbar">
-    <!-- Map Controls Section -->
+    <!-- Map Controls Section
     <div class="toolbar-section">
       <h3 class="section-title">Map Background</h3>
       <div class="radio-buttons">
@@ -13,7 +13,7 @@
         </button>
       </div>
     </div>
-
+    -->
     <!-- Map Layers Section -->
     <div class="toolbar-section">
       <h3 class="section-title">Map Layers</h3>
@@ -65,8 +65,8 @@ import layerConfig from '../layerConfig.js'
 import markerConfig from '../markerConfig.js'
 
 export default {
-  props: ['selectedBaseLayer', 'layerStates', 'selectedMarkerType', 'activeDrawTool', 'activeShapeColor'],
-  emits: ['changeLayer', 'toggleLayer', 'toggleMarkerTool', 'toggleDrawTool', 'cycleShapeColor'],
+  props: ['layerStates', 'selectedMarkerType', 'activeDrawTool', 'activeShapeColor'],
+  emits: ['toggleLayer', 'toggleMarkerTool', 'toggleDrawTool', 'cycleShapeColor'],
   data() {
     return {
       layerConfig,

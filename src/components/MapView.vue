@@ -11,12 +11,11 @@ import 'leaflet-draw'
 import { defineExpose } from 'vue'
 
 export default {
-  props: ['selectedBaseLayer', 'selectedMarkerType', 'shapeColor'],
+  props: ['selectedMarkerType', 'shapeColor'],
   data() {
     return {
       map: null,
       layers: {},
-      currentBaseLayer: null,
       dataLayers: {}, // for GeoJSON layers
       markerLayerGroup: null, // layer containing all the amrkers
       drawHandlers: {
@@ -28,13 +27,6 @@ export default {
     }
   },
   watch: {
-    selectedBaseLayer(newLayer) {
-      if (this.currentBaseLayer) {
-        this.map.removeLayer(this.currentBaseLayer)
-      }
-      this.currentBaseLayer = this.layers[newLayer]
-      this.currentBaseLayer.addTo(this.map)
-    },
     shapeColor(newColor) {
       if (this.drawHandlers.polygon) {
         this.drawHandlers.polygon.setOptions({
@@ -62,10 +54,11 @@ export default {
         minZoom: 5,
         attribution: '&copy; <a href="https://carto.com/">CartoDB</a> & <a href="https://www.openstreetmap.org/copyright">OSM</a> kitpaddle'
       }),
+      // Only using this one because it is saved locally
       localtiles: L.tileLayer('/tiles/{z}/{x}/{y}.png', {
         minZoom: 4,
         maxZoom: 8,
-        attribution: 'Local tiles'
+        attribution: '&copy; <a href="https://carto.com/">CartoDB</a>'
       })
     }
 
@@ -73,8 +66,7 @@ export default {
     this.markerLayerGroup = L.layerGroup().addTo(this.map)
 
     // Setting current base layer
-    this.currentBaseLayer = this.layers[this.selectedBaseLayer].addTo(this.map)
-    //this.currentBaseLayer = this.layers[localtiles].addTo(this.map)
+    this.layers["localtiles"].addTo(this.map)
 
     // Fetching all the data layers lsited in the config file from DAIM server
     for (const [name, config] of Object.entries(layerConfig)) {
@@ -84,12 +76,6 @@ export default {
           
           const options = { ...config }
 
-          // Conditionally attach popup logic
-          if (config.popupEnabled) {
-            options.onEachFeature = (feature, leafletLayer) => {
-              this.attachAirportPopup(feature, leafletLayer)
-            }
-          }
 
           const layer = L.geoJSON(geojson, options)
 
@@ -216,71 +202,6 @@ export default {
       } else {
         this.map.removeLayer(layer)
       }
-    },
-    attachAirportPopup(feature, layer) {
-      const code = feature.properties.POSITIONINDICATOR || 'Unknown'
-      const loc = feature.properties.LOCATION || 'Unnamed'
-
-      //layer._markerStyle = { size: 'medium', color: 'gray' }
-
-      const colorButtons = Object.entries(markerColors).map(([key, hex]) => {
-        return `<span class="circle-option" data-color="${key}" style="background-color:${hex};"></span>`
-      }).join('')
-
-      const sizeButtons = Object.entries(markerSizes).map(([key, radius]) => {
-        const px = radius * 2
-        return `<span class="circle-option" data-size="${key}" style="width:${px}px;height:${px}px;"></span>`
-      }).join('')
-
-      const popupHTML = `
-        <div>
-          <strong>${code} - ${loc}</strong><br/>
-          <div style="margin-top: 6px;">Size: ${sizeButtons}</div>
-          <div style="margin-top: 6px;">Color: ${colorButtons}</div>
-        </div>
-      `
-
-
-      layer.bindTooltip(`${code} - ${loc}`, {
-        direction: 'top',
-        offset: [0, -5]
-      })
-
-      layer.bindPopup(popupHTML)
-
-      layer.on('popupopen', (e) => {
-        const popupEl = e.popup.getElement()
-        if (!popupEl) return
-
-        // Size buttons
-        popupEl.querySelectorAll('.circle-option[data-size]').forEach(el => {
-          el.style.display = 'inline-block'
-          el.style.margin = '0 4px'
-          el.style.borderRadius = '50%'
-          el.style.backgroundColor = '#ccc'
-          el.style.cursor = 'pointer'
-          el.addEventListener('click', () => {
-            const size = el.getAttribute('data-size')
-            this.updateMarkerStyle(layer, size, layer._markerStyle?.color || 'gray')
-            layer._markerStyle.size = size
-          })
-        })
-
-        // Color buttons
-        popupEl.querySelectorAll('.circle-option[data-color]').forEach(el => {
-          el.style.display = 'inline-block'
-          el.style.width = '16px'
-          el.style.height = '16px'
-          el.style.margin = '0 4px'
-          el.style.borderRadius = '50%'
-          el.style.cursor = 'pointer'
-          el.addEventListener('click', () => {
-            const color = el.getAttribute('data-color')
-            this.updateMarkerStyle(layer, layer._markerStyle?.size || 'medium', color)
-            layer._markerStyle.color = color
-          })
-        })
-      })
     },
     startDrawPolygon() {
       this.stopActiveDrawMode()
