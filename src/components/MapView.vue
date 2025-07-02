@@ -61,15 +61,13 @@ export default {
     // Setting current base layer
     this.layers["localtiles"].addTo(this.map)
 
-    // Fetching all the data layers lsited in the config file from DAIM server
+    // Fetching all the data layers listed in the config file from DAIM server
     for (const [name, config] of Object.entries(layerConfig)) {
+      if (name === 'airports') continue // Skipping airports as its loaded in AirportListSection
       fetch(config.url)
         .then(res => res.json())
         .then(geojson => {
-          
           const options = { ...config }
-
-
           const layer = L.geoJSON(geojson, options)
 
           this.dataLayers[name] = layer
@@ -126,8 +124,6 @@ export default {
       console.log('Clicked coordinates:', e.latlng.lat.toFixed(6), e.latlng.lng.toFixed(6))
 
       if (!this.store.selectedMarkerType) return
-
-      console.log('Map clicked. Marker type:', this.store.selectedMarkerType)
 
       const config = markerConfig[this.store.selectedMarkerType]
       if (!config) return
@@ -215,6 +211,53 @@ export default {
       },
       { immediate: true }
     )
+
+    watch(
+      () => this.store.airports,
+      list => {
+        list.forEach(a => {
+          /* get or create marker keyed by ICAO */
+          let m = this.dataLayers[a.icao]
+          if (!m) {
+            m = L.circleMarker([a.lat, a.lon])
+            this.dataLayers[a.icao] = m
+          }
+
+          /* ----- size & colour look-ups (declare FIRST) ----- */
+          const radiusPx = markerSizes[a.size]          // 1, 3, 5, 8 …
+          const fillHex  = markerColors[a.color]        // '#888888', '#4CAF50', …
+
+          /* ----- apply colour (stroke + fill) -------------- */
+          m.setStyle({
+            color: "#333",
+            opacity: 0.7,
+            fillColor: fillHex,
+            fillOpacity: 1
+          })
+
+          /* ----- apply radius (circleMarker needs setRadius) */
+          if (radiusPx !== undefined) m.setRadius(radiusPx)
+
+          /* issue cues */
+          if (a.techIssue) {
+            m.setStyle({ dashArray: '4 2', weight: 2 })
+          } else if (a.staffIssue) {
+            m.setStyle({ dashArray: null, weight: 3 })
+          } else {
+            m.setStyle({ dashArray: null, weight: 1 })
+          }
+
+          /* visibility */
+          if (a.visible) {
+            m.addTo(this.markerLayerGroup)
+          } else {
+            this.markerLayerGroup.removeLayer(m)
+          }
+        })
+      },
+      { deep: true, immediate: true }
+    )
+
 
   },
   methods: {

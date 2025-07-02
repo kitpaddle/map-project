@@ -2,10 +2,29 @@ import { markerSizes, markerColors } from './markerStyleConfig.js'
 
 const includedAerodromes = ['ESSA', 'ESSB', 'ESNQ', 'ESPE', 'ESPA', 'ESNS', 'ESNX', 'ESNU', 'ESNO', 'ESNZ', 'ESNN', 'ESND', 'ESKS', 'ESCM', 'ESOW', 'ESOK', 'ESGP', 'ESGG', 'ESIB', 'ESIA', 'ESGJ', 'ESMT', 'ESMS', 'ESMK', 'ESDF', 'ESMQ', 'ESSV', 'ESSL', 'ESCF', 'ESKN', 'ESSU']
 
+const lfvICAO = [
+    'ESNQ', // Kiruna
+    'ESPE', // Vidsel
+    'ESPA', // Luleå/Kallax
+    'ESNU', // Umeå
+    'ESNZ', // Åre Östersund
+    'ESCM', // Uppsala
+    'ESSA', // Stockholm Arlanda
+    'ESSB', // Stockholm Bromma
+    'ESIB', // Såtenäs (F 7)
+    'ESIA', // Karlsborg (F 6)
+    'ESCF', // Linköping Malmen
+    'ESSV', // Visby
+    'ESDF', // Ronneby (F 17)
+    'ESMS', // Malmö Sturup
+    'ESMT', // Halmstad
+    'ESGG'  // Göteborg Landvetter
+  ];
+
 export default {
     layerFIR: {
         label: 'FIR',
-        url: 'https://daim.lfv.se/geoserver/wfs?service=WFS&&version=1.1.0&request=GetFeature&typename=mais:FIR&outputFormat=application/json&srsname=EPSG:4326',
+        url: '/geo/fir.json',
         style: {
             color: 'red',
             weight: 1,
@@ -15,43 +34,28 @@ export default {
     },
     seaborder: {
         label: 'Sjögräns',
-        url: 'https://daim.lfv.se/geoserver/wfs?service=WFS&&version=1.1.0&request=GetFeature&typename=DAIM_TOPO:Terrvattengrans&outputFormat=application/json&srsname=EPSG:4326',
+        url: '/geo/seaborder.json',
         style: {
             color: 'blue',
             weight: 1,
             fill: false,
             opacity: 0.6
         }
-    }
-    /*
+    },    
     airports: {
         label: 'Flygplatser',
-        url: 'https://daim.lfv.se/geoserver/wfs?service=WFS&&version=1.1.0&request=GetFeature&typename=mais:ARP&outputFormat=application/json&srsname=EPSG:4326',
-        filter: (feature) => {
-            return includedAerodromes.includes(feature.properties.POSITIONINDICATOR)
-        },
-        pointToLayer: (feature, latlng) => {
-            return L.circleMarker(latlng, {
-                radius: markerSizes.small,
-                color: markerColors.gray,
-                fillColor: markerColors.gray,
-                fillOpacity: 1
-            })
-        }
+        url: '/geo/airports.json',
+        filterList: lfvICAO,
+        showInMenu: false
     },
-    aerodromes: {
-        label: 'Flygfält',
-        url: 'https://daim.lfv.se/geoserver/wfs?service=WFS&&version=1.1.0&request=GetFeature&typename=mais:ARP&outputFormat=application/json&srsname=EPSG:4326',
-        filter: (feature) => {
-            return !includedAerodromes.includes(feature.properties.POSITIONINDICATOR)
-        },
-        pointToLayer: (feature, latlng) => {
-            return L.circleMarker(latlng, {
-                radius: markerSizes.smallest,
-                color: markerColors.gray,
-                fillColor: markerColors.gray,
-                fillOpacity: 1
-            })
+    lan: {
+        label: 'Län',
+        url: '/geo/provinces.geojson',
+        style: {
+            color: 'purple',
+            weight: 0.5,
+            fill: false,
+            opacity: 0.5
         }
-    }*/
+    }
 }

@@ -1,6 +1,6 @@
 <template>
     <div class="toolbar-section">
-      <SectionHeader>Marker Tools</SectionHeader>
+      <SectionHeader>MARKERS</SectionHeader>
       <div class="marker-grid">
         <button v-for="(cfg,type) in markerCfg" :key="type"
           :class="['toolbar-btn', { active: store.selectedMarkerType === type },
@@ -29,8 +29,8 @@
 
 .marker-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
 }
 
 /* icon-only buttons just need centering */
@@ -42,8 +42,8 @@
 
 /* tidy up the image */
 .icon-button img {
-  width: 30px;
-  height: 30px;
+  width: 25px;
+  height: 25px;
   object-fit: contain;
   filter: drop-shadow(0 0 2px black);
 }

@@ -3,7 +3,7 @@
 <style scoped>
 .section-title{
   margin:0;
-  padding:10px;
+  padding: 5px 0px;
   font-size:16px;
   font-weight:bold;
   color:#fff;

@@ -1,6 +1,6 @@
 <template>
     <div class="toolbar-section">
-      <SectionHeader>Drawing Shapes</SectionHeader>
+      <SectionHeader>DRAWING</SectionHeader>
   
       <div class="draw-buttons-row">
         <!-- mode buttons -->
@@ -38,8 +38,8 @@
 <style scoped>
   .draw-buttons-row {
     display: flex;
-    flex-direction: row;
-    gap: 6px;
+    flex-direction: column;
+    gap: 4px;
     flex-wrap: wrap;
     justify-content: space-between;
   }

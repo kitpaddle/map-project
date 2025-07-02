@@ -1,10 +1,10 @@
 <template>
   <div class="container">
     <div class="map-wrapper">
-      <MapView ref="mapView" :shapeColor="currentShapeColor" />
+      <MapView ref="mapView" />
     </div>
     <div class="sidebar">
-      <Sidebar :activeShapeColor="currentShapeColor" />
+      <Sidebar />
     </div>
   </div>
 </template>
@@ -34,7 +34,7 @@ html, body, #app {
 }
 
 .sidebar {
-  width: 250px;
+  width: auto;
   box-sizing: border-box;
   overflow-y: auto;
   height: 100%;
