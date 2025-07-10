@@ -10,6 +10,7 @@
       <!-- Right column -->
       <div class="col">
         <AirportListSection />
+        <CenterListSection />
       </div>
     </div>
   </template>
@@ -19,6 +20,7 @@
   import MarkerSection      from './MarkerSection.vue'
   import DrawSection        from './DrawSection.vue'
   import AirportListSection from './AirportListSection.vue'
+  import CenterListSection from './CenterListSection.vue'
   </script>
   
   <style scoped>

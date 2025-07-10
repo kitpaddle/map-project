@@ -258,6 +258,28 @@ export default {
       { deep: true, immediate: true }
     )
 
+    watch(
+      () => this.store.centers,
+      list => {
+        list.forEach(c => {
+          let m = this.dataLayers[c.icao]
+          if (!m) {
+            m = L.marker([c.lat, c.lon], {
+              icon: L.divIcon({ className:'center-icon', iconSize:[12,12] })
+            })
+            this.dataLayers[c.icao] = m
+          }
+
+          /* visibility only (size/colour optional) */
+          if (c.visible) {
+            m.addTo(this.markerLayerGroup)
+          } else {
+            this.markerLayerGroup.removeLayer(m)
+          }         
+        })
+      },
+      { deep:true, immediate:true }
+    )
 
   },
   methods: {
@@ -278,7 +300,7 @@ export default {
       const layer = this.dataLayers[name]
       console.log('Toggle request:', name, visible, layer) // Log of layer toggled
       if (!layer) {
-        console.warn(`Layer '${name}' not loaded yet.`)
+        //console.warn(`Layer '${name}' not loaded yet.`)
         return
       }
       if (visible) {

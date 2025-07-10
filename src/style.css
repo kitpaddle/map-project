@@ -58,6 +58,15 @@ button:focus-visible {
   padding: 2em;
 }
 
+.center-icon {
+  width: 12px;
+  height: 12px;
+  background: #ffbf00;
+  /* yellow */
+  border: 1px solid #222;
+  box-sizing: border-box;
+}
+
 #app {
   max-width: 1280px;
   margin: 0 auto;

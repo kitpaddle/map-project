@@ -1,0 +1,41 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "icao": "ESOS",
+                "name": "Stockholm ACC",
+                "offset": [ 0 , 0 ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [ 17.950, 59.638 ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "icao": "ESMM",
+                "name": "Malmö ACC",
+                "offset": [ 0 , 0 ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [ 13.375, 55.538 ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "icao": "RTCC",
+                "name": "Stockholm RTC",
+                "offset": [ 0, 0 ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [ 17.950, 59.638 ]
+            }
+        }
+    ]
+}

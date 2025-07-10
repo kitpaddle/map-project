@@ -41,12 +41,6 @@ export default {
             fill: false,
             opacity: 0.6
         }
-    },    
-    airports: {
-        label: 'Flygplatser',
-        url: '/geo/airports.json',
-        filterList: lfvICAO,
-        showInMenu: false
     },
     lan: {
         label: 'Län',
@@ -57,5 +51,26 @@ export default {
             fill: false,
             opacity: 0.5
         }
+    },    
+    airports: {
+        label: 'Flygplatser',
+        url: '/geo/airports.json',
+        filterList: lfvICAO,
+        showInMenu: false
+    },
+    centers: {
+        label: 'ACC & RTC',
+        url: '/geo/centers.geojson',
+        showInMenu: false,                // list controls visibility, no layer toggle
+        pointToLayer: (feature, latlng) => {
+            /* rectangle marker with divIcon */
+            return L.marker(latlng, {
+                icon: L.divIcon({
+                    className: 'center-icon',
+                    iconSize: [12, 12]
+                })
+            })
+        }
     }
+      
 }

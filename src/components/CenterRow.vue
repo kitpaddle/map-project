@@ -1,40 +1,41 @@
 <template>
     <div class="row"
-        :class="{inactive: !a.visible}">
+        :class="{inactive: !c.visible}">
 
-      <span class="icao">{{ a.icao }}</span>
+      <span class="icao">{{ c.icao }}</span>
   
       <button class="airport-btn"
-              :class="{active:a.visible}"
-              @click="store.toggleAirportVisibility(a.icao)">👁</button>
+              :class="{active:c.visible}"
+              @click="store.toggleCenterVisibility(c.icao)">👁</button>
   
       <button class="airport-btn"
-              @click="store.cycleAirportSize(a.icao)">
-              {{ a.size[0].toUpperCase() }}
+              @click="store.cycleCenterSize(c.icao)">
+              {{ c.size[0].toUpperCase() }}
       </button>
   
       <button class="airport-btn color-btn"
-              @click="store.cycleAirportColor(a.icao)">
+              @click="store.cycleCenterColor(c.icao)">
               <span class="circle"
-              :style="{ background: markerColors[a.color] }"></span>
+              :style="{ background: markerColors[c.color] }"></span>
       </button>
   
       <button class="airport-btn"
-              :class="{active:a.techIssue}"
-              @click="store.toggleAirportTechIssue(a.icao)">⚙</button>
+              :class="{active:c.techIssue}"
+              @click="store.toggleCenterTechIssue(c.icao)">⚙</button>
   
       <button class="airport-btn"
-              :class="{active:a.staffIssue}"
-              @click="store.toggleAirportStaffIssue(a.icao)">👥</button>
+              :class="{active:c.staffIssue}"
+              @click="store.toggleCenterStaffIssue(c.icao)">👥</button>
     </div>
 </template>
   
 <script setup>
-  import { useMapStore } from '../stores/mapStore'
-  import { markerColors } from '../markerStyleConfig.js'
-  const props = defineProps({ airport: Object })
-  const a = props.airport
-  const store = useMapStore()
+    import { useMapStore } from '../stores/mapStore'
+    import { markerColors } from '../markerStyleConfig.js'
+
+    const props = defineProps({ center: Object })
+    const c     = props.center
+    const store = useMapStore()
 </script>
   
 <style scoped>
