@@ -4,7 +4,7 @@
   <!-- dim the map while exporting -->
   <div v-show="exportBusy" class="map-overlay"></div>
 
-  <!-- floating export button 
+  <!-- floating export button -->
   <button class="export-btn"
           :disabled="exportBusy"
           @click="exportPng">
@@ -15,7 +15,7 @@
     <span v-else>
       ⤓ Download Map
     </span>
-  </button> -->
+  </button>
 </template>
 
 <script>
