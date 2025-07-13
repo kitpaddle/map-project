@@ -2,7 +2,7 @@
     <div class="row"
         :class="{inactive: !a.visible}">
 
-      <span class="icao">{{ a.icao }}</span>
+      <span class="icao" :data-tip="a.name">{{ a.icao }}</span>
   
       <button class="airport-btn"
               :class="{active:a.visible}"
@@ -19,11 +19,11 @@
               :style="{ background: markerColors[a.color] }"></span>
       </button>
   
-      <button class="airport-btn"
+      <button class="airport-btn issue-btn"
               :class="{active:a.techIssue}"
               @click="store.toggleAirportTechIssue(a.icao)">⚙</button>
   
-      <button class="airport-btn"
+      <button class="airport-btn issue-btn"
               :class="{active:a.staffIssue}"
               @click="store.toggleAirportStaffIssue(a.icao)">👥</button>
     </div>
@@ -75,6 +75,11 @@
       background: #969696;
   }
 
+  /* override only these buttons when they’re active */
+  .issue-btn.active {
+    background: #ffc978;   /* bright orange */
+  }
+
   /* ----------- remove glow when a button is toggled off ---------- */
   .airport-btn:not(.active):focus,
   .airport-btn:not(.active):hover,
@@ -106,6 +111,39 @@
   .row.inactive .icao {
     color: #5c5c5c;                   /* muted text colour */
   }
+
+  .icao {
+  cursor: default;
+  user-select: none;
+  position: relative;        /* anchor for the ::after tooltip */
+}
+
+/* the tooltip bubble */
+.icao::after {
+  content: attr(data-tip);   /* shows the airport name          */
+  position: absolute;
+  left: 70px;
+  bottom: 20px;              /* 20 % gap above the code          */
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: rgba(0,0,0,.90);
+  border: 1px solid #fff;
+  color: #fff;
+  font-size: 12px;
+  padding: 2px 4px;
+  opacity: 0;                /* hidden by default               */
+  pointer-events: none;      /* so the tooltip itself isn’t clickable */
+  transition: opacity 100ms ease;   /* instant-ish, feel free to tweak */
+  z-index: 2500;
+}
+
+/* show immediately on hover/focus */
+.icao:hover::after,
+.icao:hover::before,
+.icao:focus-visible::after,
+.icao:focus-visible::before {
+  opacity: 1;
+}
 
 </style>
   

@@ -1,5 +1,15 @@
 <template>
-  <div id="map"></div>
+  <div id="map" ref="mapContainer"></div>
+  <!-- grey div to make it seem locked while export takes place -->
+  <div v-show="exportBusy" class="map-overlay"></div>
+  <!-- floating export button -->
+  <button class="export-btn" :disabler="exportBusy" @click="exportPng">
+    <template v-if="exportBusy">
+      <span class="spinner"></span> Exporting…
+    </template>
+    <template v-else></template>
+    ⤓ Download Map
+  </button>
 </template>
 
 <script>
@@ -10,6 +20,38 @@ import { markerSizes, markerColors } from '../markerStyleConfig.js'
 import L from 'leaflet'
 import 'leaflet-draw'
 import { watch } from 'vue'
+import html2canvas from 'html2canvas'
+
+const DEFAULT_ICON_SIZE = 40;
+
+/* Function used to draw rectangles on map for icons */
+function buildCenterIcon(center) {
+  /* ------------ size calculations ------------ */
+  const baseRadius = markerSizes[center.size] ?? 8;      // fall-back radius
+  const sidePx     = baseRadius * 6;                    // rectangle width
+  const heightPx   = sidePx / 1.6;                       // banner height
+  const fontPx     = Math.round(sidePx * 0.4);           // label font size
+
+  const fillHex = markerColors[center.color] ?? '#ffbf00';
+
+  /* ------------ SVG / DIV icon --------------- */
+  const html = `
+    <div class="center-icon"
+         style="
+           width:${sidePx}px;
+           height:${heightPx}px;
+           background:${fillHex};
+           font-size:${fontPx}px;">
+      ${center.icao}
+    </div>`;
+
+  return L.divIcon({
+    html,
+    className: '',                 // prevent Leaflet default styles
+    iconSize : [sidePx, heightPx]
+  });
+}
+
 
 export default {
   setup(){
@@ -28,12 +70,15 @@ export default {
         edit: null,
         delete: null
       },
-      activeDrawMode: null
+      activeDrawMode: null,
+      badgeLayers: {},
+      exportBusy: false
     }
   },
   mounted() {
     // Setting the map default view
-    this.map = L.map('map').setView([60, 18], 6)
+    this.canvasRenderer = L.canvas();     // one shared renderer
+    this.map = L.map('map', { preferCanvas: true }).setView([60, 18], 6)
 
     // Creating both base layers
     this.layers = {
@@ -51,7 +96,8 @@ export default {
       localtiles: L.tileLayer('/tiles/{z}/{x}/{y}.png', {
         minZoom: 4,
         maxZoom: 8,
-        attribution: '&copy; <a href="https://carto.com/">CartoDB</a>'
+        attribution: '&copy; <a href="https://carto.com/">CartoDB</a>',
+        crossOrigin: 'anonymous'
       })
     }
 
@@ -67,7 +113,7 @@ export default {
       fetch(config.url)
         .then(res => res.json())
         .then(geojson => {
-          const options = { ...config }
+          const options = { ...config , renderer: this.canvasRenderer}
           const layer = L.geoJSON(geojson, options)
 
           this.dataLayers[name] = layer
@@ -85,7 +131,7 @@ export default {
       allowIntersection: false,
       showArea: false,
       shapeOptions: {
-        color: this.store.shapeColor,
+        color: this.store.drawColor,
         weight: 2
       }
     })
@@ -133,9 +179,9 @@ export default {
       if (config.icon) {
         const icon = L.icon({
           iconUrl: config.icon,
-          iconSize: [40, 40],
-          iconAnchor: [20, 20], // center the icon
-          popupAnchor: [0, -20]
+          iconSize: [DEFAULT_ICON_SIZE, DEFAULT_ICON_SIZE],
+          iconAnchor: [DEFAULT_ICON_SIZE / 2, DEFAULT_ICON_SIZE / 2], // center the icon
+          popupAnchor: [0, - DEFAULT_ICON_SIZE / 2]
         })
 
         marker = L.marker(e.latlng, { icon })
@@ -144,7 +190,8 @@ export default {
           radius: 8,
           color: config.color,
           fillColor: config.color,
-          fillOpacity: 1
+          fillOpacity: 1,
+          renderer: this.canvasRenderer
         })
       }
 
@@ -253,6 +300,11 @@ export default {
           } else {
             this.markerLayerGroup.removeLayer(m)
           }
+
+          /* Issues Icons */
+          this.toggleBadge([a.lat, a.lon], `${a.icao}_maint`, 'maint', radiusPx, 0, a.techIssue)
+          this.toggleBadge([a.lat, a.lon], `${a.icao}_staff`, 'staff', radiusPx, 0, a.staffIssue)
+
         })
       },
       { deep: true, immediate: true }
@@ -264,18 +316,27 @@ export default {
         list.forEach(c => {
           let m = this.dataLayers[c.icao]
           if (!m) {
-            m = L.marker([c.lat, c.lon], {
-              icon: L.divIcon({ className:'center-icon', iconSize:[12,12] })
-            })
+            m = L.marker([c.lat, c.lon], { zIndexOffset:1000 })
             this.dataLayers[c.icao] = m
           }
+
+          /* always refresh icon so size / colour / text update */
+          m.setIcon( buildCenterIcon(c) )
 
           /* visibility only (size/colour optional) */
           if (c.visible) {
             m.addTo(this.markerLayerGroup)
           } else {
             this.markerLayerGroup.removeLayer(m)
-          }         
+          }
+
+          /* radius for badge-anchor */
+          const radiusPx = markerSizes[c.size] ?? 8
+          
+          /* Issues Icons */
+          this.toggleBadge([c.lat, c.lon], `${c.icao}_maint`, 'maint', radiusPx, 15,  c.techIssue)
+          this.toggleBadge([c.lat, c.lon], `${c.icao}_staff`, 'staff', radiusPx, 15, c.staffIssue)
+          
         })
       },
       { deep:true, immediate:true }
@@ -307,6 +368,14 @@ export default {
         layer.addTo(this.map)
       } else {
         this.map.removeLayer(layer)
+
+        // Also remove the issues icons
+        const prefix = name + '_'
+        Object.entries(this.badgeLayers).forEach(([key, mk]) => {
+          if (key.startsWith(prefix)) {
+            this.markerLayerGroup.removeLayer(mk)
+          }
+        })
       }
     },
     startDrawPolygon() {
@@ -342,10 +411,177 @@ export default {
       else if (this.activeDrawMode === 'edit') this.drawHandlers.edit.disable()
       else if (this.activeDrawMode === 'delete') this.drawHandlers.delete.disable()
       this.activeDrawMode = null
+    },
+
+    toggleBadge(latlng, key, type, radiusPx, offsetRight, show) {
+      let m = this.badgeLayers[key]
+
+      if (show && !m) {
+        m = L.marker(latlng, {
+          icon         : buildBadgeIcon(type, radiusPx, offsetRight),
+          interactive  : false,
+          zIndexOffset : 1500
+        })
+        this.badgeLayers[key] = m
+      }
+
+      if (show && m) {
+        m.setIcon(buildBadgeIcon(type, radiusPx, offsetRight))
+      }
+
+      if (show)   m.addTo(this.markerLayerGroup)
+      else if (m) this.markerLayerGroup.removeLayer(m)
+    },
+
+    async captureView () {
+      // (optional) hide Leaflet controls in the shot
+      const ctrls = Array.from(
+        this.map.getContainer().querySelectorAll('.leaflet-control')
+      );
+      ctrls.forEach(el => el.style.visibility = 'hidden');
+
+      const canvas  = await html2canvas(this.map.getContainer(), {
+        useCORS   : true,       // tiles are served with  crossOrigin:'anonymous'
+        allowTaint: false
+      });
+
+      ctrls.forEach(el => el.style.visibility = '');
+
+      return canvas.toDataURL('image/png');
+    },
+
+    /* ---------------------------------------------
+    *  export a full-height map at zoom-6
+    * --------------------------------------------- */
+    async exportPng () {
+      if (this.exportBusy) return;        // debounce double-clicks
+        this.exportBusy = true;             // ⇐ disable & show spinner
+        try {
+          const ZOOM       = 6;
+          const BOUNDS     = [[71.5, 5.5], [51.5, 30.0]];     // [N-W , S-E]
+          const OVERLAP_PX = 0;                              // smooth seams
+          const WAIT_MS    = 800;                             // before & after
+          const wait       = ms => new Promise(r => setTimeout(r, ms));
+
+          /* remember user view */
+          const restore = { ctr: this.map.getCenter(), zoom: this.map.getZoom() };
+          console.log("Initiating Screenshot at zoom " + ZOOM)
+
+          /* 1 ▸ jump to centre of bounds @ z-6, let tiles load */
+          this.map.setView(
+            [(BOUNDS[0][0]+BOUNDS[1][0])/2,
+            (BOUNDS[0][1]+BOUNDS[1][1])/2],
+            ZOOM,
+            { animate:false }
+          );
+          await wait(WAIT_MS);
+
+          /* 2 ▸ shift so viewport-TOP aligns with north edge */
+          const v        = this.map.getBounds();
+          const halfSpan = (v.getNorth() - v.getSouth()) / 2;
+          const topCtr   = L.latLng(BOUNDS[0][0] - halfSpan, this.map.getCenter().lng);
+
+          this.map.setView(topCtr, ZOOM, { animate:false });
+          await wait(WAIT_MS);
+
+          /* 3 ▸ capture / scroll loop */
+          const strips = [];
+          while (true) {
+            strips.push(await this.captureView());              // --- shot
+            console.log(' Taking screenshot');
+
+            const b   = this.map.getBounds();
+            if (b.getSouth() <= BOUNDS[1][0]) break;            // south edge reached
+
+            // pan down: full screen-height minus the overlap
+            const dy = this.map.getSize().y - OVERLAP_PX;
+            this.map.panBy([0, dy], { animate:false });
+            console.log("Paning down to continue screenshot")
+            await wait(WAIT_MS);
+          }
+
+          /* 4 ▸ stitch vertically in one canvas */
+          console.log("Finished all screenshots. Stitching them together")
+          const imgs = await Promise.all(strips.map(src => new Promise(res => {
+            const im = new Image();
+            im.onload = () => res(im);
+            im.src    = src;
+          })));
+
+          const W       = imgs[0].width;
+          const totalH  = imgs.reduce((h, im, i) =>
+                            h + (i ? im.height - OVERLAP_PX : im.height), 0);
+
+          const cvs = document.createElement('canvas');
+          cvs.width  = W;  cvs.height = totalH;
+          const ctx  = cvs.getContext('2d');
+
+          let y = 0;
+          imgs.forEach((im, i) => {
+            ctx.drawImage(im, 0, y);
+            y += (i ? im.height - OVERLAP_PX : im.height);
+          });
+          console.log("Downloading picture")
+          cvs.toBlob(blob => {
+            const url = URL.createObjectURL(blob);
+            const a   = Object.assign(document.createElement('a'),
+                                      { href:url, download:'sam-map-export.png' });
+            a.click();
+            URL.revokeObjectURL(url);
+          }, 'image/png', 0.92);
+
+          /* 5 ▸ restore user view */
+          await wait(WAIT_MS);
+          this.map.setView(restore.ctr, restore.zoom, { animate:false });
+        } finally {
+          this.exportBusy = false;
+        }
     }
+
+
   }
 
 }
+
+/* ------------------------------------------------------------------ */
+/*  buildBadgeIcon(type, r)                                           */
+/*  type = 'maint' | 'staff'                                          */
+/*  r    = pixel radius of the main circle-marker (6, 8, 12 …)        */
+/* ------------------------------------------------------------------ */
+import maintPng     from '../assets/icons/icon_maintenance.png'
+import personnelPng from '../assets/icons/icon_personnel.png'
+
+const _badgeCache = new Map()
+
+function buildBadgeIcon(type, r, offsetRight) {
+  const key = `${type}_${r}_${offsetRight}`
+  if (_badgeCache.has(key)) return _badgeCache.get(key)
+
+  const ICON_SIZE = 12        // width & height of the PNG
+  const GAP       = 4         // gap between badge & marker edge
+
+  /* desired offset of the BADGE-centre *from the marker centre* */
+  const dx = r + GAP + offsetRight     // always to the right
+  const dy = type === 'maint'
+           ?  -10 + GAP                   // down  → lower-right
+           :  2 + GAP                 // up    → upper-right
+
+  /* Leaflet maths:  anchor = [ax, ay] where
+       (ICON_SIZE/2 - ax, ICON_SIZE/2 - ay)  ==  (dx, dy)           */
+  const ax = ICON_SIZE/2 - dx
+  const ay = ICON_SIZE/2 - dy
+
+  const icon = L.icon({
+    iconUrl   : type === 'maint' ? maintPng : personnelPng,
+    iconSize  : [ICON_SIZE, ICON_SIZE],
+    iconAnchor: [ax, ay],
+    className : `badge-${type}`
+  })
+
+  _badgeCache.set(key, icon)
+  return icon
+}
+
 </script>
 
 <style>
@@ -353,4 +589,33 @@ export default {
   height: 100%;
   width: 100%;
 }
+
+.export-btn {
+  position:absolute; bottom:10px; left:10px;
+  padding:6px 10px;
+  background:#ff9800;          /* orange brand colour */
+  color:#fff; border:none; border-radius:4px;
+  font-weight:600; cursor:pointer;
+  box-shadow:0 0 6px rgba(0,0,0,.35);
+  transition:background .2s ease;
+  z-index: 2000; 
+}
+.export-btn:hover { background:#ffa726; }
+
+.spinner{
+  width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;
+  border-radius:50%;display:inline-block;animation:spin .8s linear infinite;
+  vertical-align:middle
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.export-btn[disabled]{opacity:.6;cursor:not-allowed}
+
+/* overlay dims the whole screen and blocks clicks */
+.map-overlay{
+  position:fixed;          /* covers the viewport, no wrapper needed  */
+  top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,.35);
+  z-index:1800;            /* below the button (2000) but above #map */
+}
+
 </style>

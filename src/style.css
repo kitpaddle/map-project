@@ -59,12 +59,16 @@ button:focus-visible {
 }
 
 .center-icon {
-  width: 12px;
-  height: 12px;
-  background: #ffbf00;
-  /* yellow */
-  border: 1px solid #222;
-  box-sizing: border-box;
+  display: flex;                          /* make it a flex-box */
+  justify-content: center;                /* center the label horizontally */
+  align-items: center;                    /* center vertically */
+  font-family: "Roboto Mono", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #000;                          /* text colour */
+  border: 1px solid #222;               /* constant outline */
+  box-sizing: border-box;                 /* border included in width/height */
+  pointer-events: none;                   /* clicks go through to the marker */
 }
 
 #app {

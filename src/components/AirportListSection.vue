@@ -27,7 +27,7 @@ onMounted(async () => {
         lat : f.geometry.coordinates[1],
         lon : f.geometry.coordinates[0],
         visible: false,
-        size: 'small',
+        size: 'medium',
         color: 'gray',
         techIssue: false,
         staffIssue: false
