@@ -85,6 +85,8 @@ export default {
     // Setting the map default view
     this.canvasRenderer = L.canvas();     // one shared renderer
     this.map = L.map('map', { preferCanvas: true }).setView([60, 18], 6)
+    
+    const tileRoot = import.meta.env.BASE_URL + 'tiles/{z}/{x}/{y}.png'
 
     // Creating both base layers
     this.layers = {
@@ -99,7 +101,7 @@ export default {
         attribution: '&copy; <a href="https://carto.com/">CartoDB</a> & <a href="https://www.openstreetmap.org/copyright">OSM</a> kitpaddle'
       }),
       // Only using this one because it is saved locally
-      localtiles: L.tileLayer('/tiles/{z}/{x}/{y}.png', {
+      localtiles: L.tileLayer(tileRoot, {
         minZoom: 4,
         maxZoom: 8,
         attribution: '&copy; <a href="https://carto.com/">CartoDB</a>',
@@ -113,10 +115,13 @@ export default {
     // Setting current base layer
     this.layers["localtiles"].addTo(this.map)
 
+    
+
     // Fetching all the data layers listed in the config file from DAIM server
     for (const [name, config] of Object.entries(layerConfig)) {
       if (name === 'airports') continue // Skipping airports as its loaded in AirportListSection
-      fetch(config.url)
+      const layersUrl = import.meta.env.BASE_URL + config.url
+      fetch(layersUrl)
         .then(res => res.json())
         .then(geojson => {
           const options = { ...config , renderer: this.canvasRenderer}

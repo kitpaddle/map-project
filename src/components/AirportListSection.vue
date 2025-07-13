@@ -6,7 +6,6 @@ import AirportRow from './AirportRow.vue'
 import SectionHeader from './SectionHeader.vue'
 
 const store = useMapStore()
-const sortKey = ref('icao')    // 'icao' | 'tech' | 'staff'
 
 /* load once */
 onMounted(async () => {
@@ -15,7 +14,7 @@ onMounted(async () => {
 
     if (store.airports.length) return     // already loaded once
 
-    const url = layerConfig.airports.url
+    const url = import.meta.env.BASE_URL + layerConfig.airports.url
     const allow = layerConfig.airports.filterList
     const geo   = await fetch(url).then(r=>r.json())
 

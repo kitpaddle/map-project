@@ -1,8 +1,11 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-// https://vite.dev/config/
-export default defineConfig({
-  base: './', //added this line but is good for opening project locally "offline"
+export default defineConfig(({ mode }) => ({
   plugins: [vue()],
-})
+
+  // pick base path depending on the build command
+  base: mode === 'gh'            // when you run: vite build --mode gh
+    ? '/map-project/'        // → GitHub Pages (repo name)
+    : './',                  // default build / offline bundle
+}));

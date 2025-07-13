@@ -9,7 +9,8 @@ const store = useMapStore()
 
 onMounted(async () => {
   if (store.centers.length) return               // already loaded
-  const geo = await fetch(layerConfig.centers.url).then(r => r.json())
+  const url = import.meta.env.BASE_URL + layerConfig.centers.url
+  const geo = await fetch(url).then(r => r.json())
   const list = geo.features.map(f => ({
     icao:      f.properties.icao,
     name:      f.properties.name,

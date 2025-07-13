@@ -24,7 +24,7 @@ const lfvICAO = [
 export default {
     layerFIR: {
         label: 'FIR',
-        url: '/geo/fir.json',
+        url: 'geo/fir.json',
         style: {
             color: 'red',
             weight: 1,
@@ -34,7 +34,7 @@ export default {
     },
     seaborder: {
         label: 'Sjögräns',
-        url: '/geo/seaborder.json',
+        url: 'geo/seaborder.json',
         style: {
             color: 'blue',
             weight: 1,
@@ -44,7 +44,7 @@ export default {
     },
     lan: {
         label: 'Län',
-        url: '/geo/provinces.geojson',
+        url: 'geo/provinces.geojson',
         style: {
             color: 'purple',
             weight: 0.5,
@@ -54,13 +54,13 @@ export default {
     },    
     airports: {
         label: 'Flygplatser',
-        url: '/geo/airports.json',
+        url: 'geo/airports.json',
         filterList: lfvICAO,
         showInMenu: false
     },
     centers: {
         label: 'ACC & RTC',
-        url: '/geo/centers.geojson',
+        url: 'geo/centers.geojson',
         showInMenu: false,                // list controls visibility, no layer toggle
         pointToLayer: (feature, latlng) => {
             /* rectangle marker with divIcon */
