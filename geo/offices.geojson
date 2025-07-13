@@ -1,0 +1,59 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "icao": "HK",
+                "name": "HK i NOrrköping",
+                "offset": [
+                    0,
+                    0
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    58.5,
+                    16.2
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "icao": "GH",
+                "name": "Glashuset i Malmö",
+                "offset": [
+                    0,
+                    0
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    13.4,
+                    55.1
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "icao": "RTCC",
+                "name": "Stockholm RTC",
+                "offset": [
+                    0,
+                    0
+                ]
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    18.9,
+                    59.8
+                ]
+            }
+        }
+    ]
+}
