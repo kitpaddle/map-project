@@ -34,7 +34,7 @@ const rows = computed(() =>
 
 <template>
   <div class="toolbar-section">
-    <SectionHeader>ACC & RTC</SectionHeader>
+    <SectionHeader>CENTERS</SectionHeader>
 
     <TransitionGroup name="airrow" tag="div" class="center-list">
       <CenterRow v-for="c in rows" :key="c.icao" :center="c" />

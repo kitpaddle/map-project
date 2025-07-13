@@ -1,15 +1,21 @@
 <template>
   <div id="map" ref="mapContainer"></div>
-  <!-- grey div to make it seem locked while export takes place -->
+
+  <!-- dim the map while exporting -->
   <div v-show="exportBusy" class="map-overlay"></div>
-  <!-- floating export button -->
-  <button class="export-btn" :disabler="exportBusy" @click="exportPng">
-    <template v-if="exportBusy">
-      <span class="spinner"></span> Exporting…
-    </template>
-    <template v-else></template>
-    ⤓ Download Map
-  </button>
+
+  <!-- floating export button 
+  <button class="export-btn"
+          :disabled="exportBusy"
+          @click="exportPng">
+    <span v-if="exportBusy">
+      <span class="spinner"></span>
+      Exporting…
+    </span>
+    <span v-else>
+      ⤓ Download Map
+    </span>
+  </button> -->
 </template>
 
 <script>
