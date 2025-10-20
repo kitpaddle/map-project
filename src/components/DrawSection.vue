@@ -5,7 +5,10 @@
       <div class="draw-buttons-row">
         <!-- mode buttons -->
         <button :class="['toolbar-btn', { active: store.activeDrawTool==='draw' }]"
-                @click="toggle('draw')">Draw</button>
+                @click="toggle('draw')">Draw ⬠</button>
+
+        <button :class="['toolbar-btn', { active: store.activeDrawTool==='arrowline' }]"
+              @click="toggle('arrowline')">Draw ➝</button>
   
         <button :class="['toolbar-btn', { active: store.activeDrawTool==='edit' }]"
                 @click="toggle('edit')">Edit</button>

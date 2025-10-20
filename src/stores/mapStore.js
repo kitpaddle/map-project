@@ -8,7 +8,8 @@ export const useMapStore = defineStore('map', {
         activeDrawTool: null,
         drawColor: shapeColors[0],
         airports: [],
-        centers: []
+        centers: [],
+        offices: []
     }),
     actions: {
 
@@ -57,13 +58,30 @@ export const useMapStore = defineStore('map', {
         toggleCenterTechIssue(icao) { const c = this._byIdC(icao); if (c) c.techIssue = !c.techIssue },
         toggleCenterStaffIssue(icao) { const c = this._byIdC(icao); if (c) c.staffIssue = !c.staffIssue },
 
+        /* OFFICE ACTIONS */
+        toggleOfficeVisibility(id) { const o = this._byIdO(id); if (o) o.visible = !o.visible },
+        cycleOfficeSize(id) {
+            const order = Object.keys(markerSizes)
+            const o = this._byIdO(id); if (!o) return
+            o.size = order[(order.indexOf(o.size) + 1) % order.length]
+        },
+        cycleOfficeColor(id) {
+            const palette = Object.keys(markerColors)
+            const o = this._byIdO(id); if (!o) return
+            o.color = palette[(palette.indexOf(o.color) + 1) % palette.length]
+        },
+        toggleOfficeTechIssue(id) { const o = this._byIdO(id); if (o) o.techIssue = !o.techIssue },
+        toggleOfficeStaffIssue(id) { const o = this._byIdO(id); if (o) o.staffIssue = !o.staffIssue },
+
         /* init helper (called once) */
         setAirports(list) { this.airports = list },
         setCenters(list) { this.centers = list },
+        setOffices(list) { this.offices = list },
 
         /* internal */
         _byId(icao) { return this.airports.find(x => x.icao === icao) },
-        _byIdC(icao) { return this.centers.find(x => x.icao === icao) }
+        _byIdC(icao) { return this.centers.find(x => x.icao === icao) },
+        _byIdO(icao) { return this.offices.find(x => x.icao === icao) }
     }
 
 })

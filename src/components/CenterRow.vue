@@ -2,7 +2,7 @@
     <div class="row"
         :class="{inactive: !c.visible}">
 
-      <span class="icao">{{ c.icao }}</span>
+      <span class="icao" :data-tip="c.name">{{ c.icao }}</span>
   
       <button class="airport-btn"
               :class="{active:c.visible}"
@@ -49,11 +49,38 @@
   }
 
   .icao{
-    font-family: "Roboto Mono", monospace; /* equal-width letters */
+    font-family: "Roboto Mono", monospace;
     font-size: 16px;
     font-weight: 600;
     text-align: center;
+
+    cursor: default;
+    user-select: none;
+    position: relative; /* anchor for ::after tooltip */
   }
+
+  /* the tooltip bubble */
+  .icao::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: 70px;
+    bottom: 20px;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    background: rgba(0,0,0,.90);
+    border: 1px solid #fff;
+    color: #fff;
+    font-size: 12px;
+    padding: 2px 4px;
+    opacity: 0;                /* hidden by default */
+    pointer-events: none;
+    transition: opacity 100ms ease;
+    z-index: 2500;
+  }
+
+  /* show on hover/focus */
+  .icao:hover::after,
+  .icao:focus-visible::after { opacity: 1; }
 
   .airport-btn {
     font-size: 13px;

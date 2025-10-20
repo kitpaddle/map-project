@@ -71,6 +71,19 @@ export default {
                 })
             })
         }
+    },
+    offices: {
+        label: 'Offices',
+        url: 'geo/offices.geojson',
+        showInMenu: false,   // controlled by the list section, not the LAYERS section
+        pointToLayer: (feature, latlng) => {
+            return L.marker(latlng, {
+                icon: L.divIcon({
+                    className: 'office-icon',
+                    iconSize: [12, 12]
+                })
+            })
+        }
     }
       
 }

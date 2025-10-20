@@ -25,6 +25,7 @@ import markerConfig from '../markerConfig.js'
 import { markerSizes, markerColors } from '../markerStyleConfig.js'
 import L from 'leaflet'
 import 'leaflet-draw'
+import 'leaflet-polylinedecorator'
 import { watch } from 'vue'
 import html2canvas from 'html2canvas'
 
@@ -40,7 +41,7 @@ function buildCenterIcon(center) {
 
   const fillHex = markerColors[center.color] ?? '#ffbf00';
 
-  /* ------------ SVG / DIV icon --------------- */
+  // SVG / DIV icon
   const html = `
     <div class="center-icon"
          style="
@@ -58,6 +59,102 @@ function buildCenterIcon(center) {
   });
 }
 
+function buildOfficeIcon(o) {
+  const r      = markerSizes[o.size] ?? 8;                 // your size scale
+  const box    = Math.max(22, Math.round(r * 6));          // bump as you like (6→7 for bigger)
+  const fill   = markerColors[o.color] ?? '#888';          // building tint
+  const stroke = 'rgba(0,0,0,.35)';                        // subtle outline
+  const roof   = _lightenHex(fill, 0.18);
+  const accent = _lightenHex(fill, 0.28);
+  const door   = _darkenHex(fill, 0.35);
+  const sw     = (box/24) * 0.9;                           // scale stroke width
+  const label  = (o.icao || '').toUpperCase().slice(0, 8); // keep it tidy (fits 3–8 chars well)
+
+  const svg = `
+  <svg viewBox="0 0 24 24" width="${box}" height="${box}"
+       xmlns="http://www.w3.org/2000/svg" style="display:block">
+    <!-- ground shadow (no blur; html2canvas-safe) -->
+    <ellipse cx="12" cy="21" rx="6.8" ry="1.4" fill="black" opacity="0.22"/>
+
+    <!-- taller building body -->
+    <rect x="6" y="4.8" width="12" height="13.6" rx="2.2"
+          fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>
+
+    <!-- roof band -->
+    <rect x="6.6" y="5.4" width="10.8" height="1.6" rx="0.8" fill="${roof}" opacity="0.95"/>
+
+    <!-- side accent -->
+    <rect x="7.2" y="7" width="1.6" height="10" rx="0.8" fill="${accent}" opacity="0.9"/>
+
+    <!-- 2×3 windows -->
+    <g fill="white" opacity="0.96">
+      <rect x="9.0"  y="7.2"  width="2.2" height="1.9" rx="0.4"/>
+      <rect x="12.8" y="7.2"  width="2.2" height="1.9" rx="0.4"/>
+      <rect x="9.0"  y="10.1" width="2.2" height="1.9" rx="0.4"/>
+      <rect x="12.8" y="10.1" width="2.2" height="1.9" rx="0.4"/>
+      <rect x="9.0"  y="13.0" width="2.2" height="1.9" rx="0.4"/>
+      <rect x="12.8" y="13.0" width="2.2" height="1.9" rx="0.4"/>
+    </g>
+
+    <!-- door + knob -->
+    <rect x="10.7" y="15.9" width="2.6" height="2.9" rx="0.5" fill="${door}"/>
+    <circle cx="12.8" cy="17.3" r="0.25" fill="white" opacity="0.9"/>
+  </svg>`;
+
+  return L.divIcon({
+    html: svg,
+    className: '',
+    iconSize: [box, box],
+    // If you want it to “sit” on the point, use bottom anchoring:
+    // iconAnchor: [box/2, box*0.88],
+    iconAnchor: [box/2, box/2]
+  });
+}
+
+
+
+/* helpers (keep one copy; if you already added _darkenHex, don't duplicate) */
+function _darkenHex(hex, amt=0.3) {
+  const n = hex.replace('#','');
+  const num = parseInt(n.length===3 ? n.split('').map(c=>c+c).join('') : n, 16);
+  const r = Math.max(0, ((num>>16)&255) * (1-amt));
+  const g = Math.max(0, ((num>>8)&255)  * (1-amt));
+  const b = Math.max(0, (num&255)       * (1-amt));
+  const to2 = v => v.toString(16).padStart(2,'0');
+  return `#${to2(r|0)}${to2(g|0)}${to2(b|0)}`;
+}
+function _lightenHex(hex, amt=0.2) {
+  const n = hex.replace('#','');
+  const num = parseInt(n.length===3 ? n.split('').map(c=>c+c).join('') : n, 16);
+  const r = Math.min(255, ((num>>16)&255) + 255*amt);
+  const g = Math.min(255, ((num>>8)&255)  + 255*amt);
+  const b = Math.min(255, (num&255)       + 255*amt);
+  const to2 = v => v.toString(16).padStart(2,'0');
+  return `#${to2(r|0)}${to2(g|0)}${to2(b|0)}`;
+}
+
+
+/*
+function buildOfficeIcon(office) {
+  const baseRadius = markerSizes[office.size] ?? 8
+  const sidePx     = baseRadius * 6
+  const heightPx   = sidePx / 1.6
+  const fontPx     = Math.round(sidePx * 0.4)
+  const fillHex    = markerColors[office.color] ?? '#ffbf00'
+
+  const html = `
+    <div class="office-icon"
+         style="
+           width:${sidePx}px;
+           height:${heightPx}px;
+           background:${fillHex};
+           font-size:${fontPx}px;">
+      ${office.icao}
+    </div>`
+
+  return L.divIcon({ html, className:'', iconSize:[sidePx, heightPx] })
+}*/
+
 
 export default {
   setup(){
@@ -73,6 +170,7 @@ export default {
       markerLayerGroup: null, // layer containing all the amrkers
       drawHandlers: {
         polygon: null,
+        polyline: null,
         edit: null,
         delete: null
       },
@@ -147,6 +245,11 @@ export default {
       }
     })
 
+    
+    this.drawHandlers.polyline = new L.Draw.Polyline(this.map, {
+      shapeOptions: { color: this.store.drawColor, weight: 3 }
+    })
+
     this.drawHandlers.edit = new L.EditToolbar.Edit(this.map, {
       featureGroup: drawnItems
     })
@@ -169,8 +272,92 @@ export default {
     this.map.on(L.Draw.Event.CREATED, (e) => {
       drawnItems.addLayer(e.layer)
 
+      if (e.layerType === 'polyline') {
+        const color = this.store.drawColor
+        const deco = L.polylineDecorator(e.layer, {
+          patterns: [{
+            offset: '100%', repeat: 0,
+            symbol: L.Symbol.arrowHead({
+              pixelSize: 28, polygon: true,
+              pathOptions: { color, fillColor: color, fillOpacity: 1, weight: 1, interactive: true }
+            })
+          }]
+        })
+        // keep a reference so edits/deletes can update it
+        e.layer._arrowDecorator = deco
+        deco.addTo(this.map)
+
+        // live-update the arrowhead while vertices are dragged
+        const onEdit = () => {
+          if (e.layer._arrowDecorator) {
+            e.layer._arrowDecorator.setPaths(e.layer) // rebind path to the edited line
+          }
+        }
+        e.layer.on('edit', onEdit)
+        e.layer._onEditArrowSync = onEdit
+      }
+
       // Reset activeDrawTool in the store so Draw button toggles off
       this.store.setDrawTool(null)
+    })
+
+    drawnItems.on('layerremove', (ev) => {
+      const line = ev.layer
+      if (!line) return
+      if (line._onEditArrowSync) {
+        line.off('edit', line._onEditArrowSync)
+        delete line._onEditArrowSync
+      }
+      if (line._arrowDecorator) {
+        this.map.removeLayer(line._arrowDecorator)
+        delete line._arrowDecorator
+      }
+    })
+
+    this.map.on('draw:deleted', (evt) => {
+      evt.layers.eachLayer((layer) => {
+        if (layer._onEditArrowSync) {
+          layer.off('edit', layer._onEditArrowSync)
+          delete layer._onEditArrowSync
+        }
+        if (layer._arrowDecorator) {
+          this.map.removeLayer(layer._arrowDecorator)
+          delete layer._arrowDecorator
+        }
+      })
+    })
+
+    this.map.on('draw:deletestart', () => {
+      drawnItems.eachLayer((line) => {
+        if (line._arrowDecorator && !line._arrowDecorator._onDeleteClick) {
+          const deco = line._arrowDecorator
+          deco._onDeleteClick = () => {
+            // remove the head first
+            if (line._arrowDecorator) {
+              this.map.removeLayer(line._arrowDecorator)
+              delete line._arrowDecorator
+            }
+            if (line._onEditArrowSync) {
+              line.off('edit', line._onEditArrowSync)
+              delete line._onEditArrowSync
+            }
+            // then remove the line (triggers drawnItems 'layerremove' too)
+            drawnItems.removeLayer(line)
+          }
+          deco.on('click', deco._onDeleteClick)
+        }
+      })
+    })
+
+    // Clean up the temporary click handlers when Delete mode ends
+    this.map.on('draw:deletestop', () => {
+      drawnItems.eachLayer((line) => {
+        if (line._arrowDecorator && line._arrowDecorator._onDeleteClick) {
+          const deco = line._arrowDecorator
+          deco.off('click', deco._onDeleteClick)
+          delete deco._onDeleteClick
+        }
+      })
     })
 
 
@@ -234,7 +421,7 @@ export default {
       { deep: true, immediate: true }
     )
 
-    // The  draw / edit / delete tool Section
+    // The  draw / polyline / edit / delete tool Section
     watch(
       () => this.store.activeDrawTool,
       (tool) => {
@@ -242,10 +429,12 @@ export default {
         if (tool === 'draw')   this.startDrawPolygon()
         if (tool === 'edit')   this.startEditShapes()
         if (tool === 'delete') this.startDeleteShapes()
+        if (tool === 'arrowline') this.startDrawPolyline()
       },
       { immediate: true }
     )
 
+    // watch for drawColor
     watch(
       () => this.store.drawColor,
       (c) => {
@@ -261,10 +450,24 @@ export default {
           })
         }
 
+        if (this.drawHandlers.polyline) {
+          this.drawHandlers.polyline.setOptions({ 
+            shapeOptions: { 
+              color: c, 
+              weight: 3 
+            }
+          })
+        }
+
         // ② If we’re currently in Draw mode, restart it so new shapes use the colour
         if (this.activeDrawMode === 'draw') {
           this.drawHandlers.polygon.disable()
           this.drawHandlers.polygon.enable()
+        }
+        
+        if (this.activeDrawMode === 'polyline') {
+          this.drawHandlers.polyline.disable(); 
+          this.drawHandlers.polyline.enable()
         }
       },
       { immediate: true }
@@ -353,6 +556,35 @@ export default {
       { deep:true, immediate:true }
     )
 
+    watch(
+      () => this.store.offices,
+      list => {
+        list.forEach(o => {
+          let m = this.dataLayers[o.icao]
+          if (!m) {
+            m = L.marker([o.lat, o.lon], { zIndexOffset: 900 })
+            this.dataLayers[o.icao] = m
+          }
+
+          // always refresh icon so size/colour/label update
+          m.setIcon(buildOfficeIcon(o))
+
+          // visibility
+          if (o.visible) {
+            m.addTo(this.markerLayerGroup)
+          } else {
+            this.markerLayerGroup.removeLayer(m)
+          }
+
+          // badges (reuse same helper + assets)
+          const radiusPx = markerSizes[o.size] ?? 8
+          this.toggleBadge([o.lat, o.lon], `${o.icao}_maint`, 'maint', radiusPx, 10, o.techIssue)
+          this.toggleBadge([o.lat, o.lon], `${o.icao}_staff`, 'staff', radiusPx, 10, o.staffIssue)
+        })
+      },
+      { deep:true, immediate:true }
+    )
+
   },
   methods: {
     updateMarkerStyle(layer, size, colorKey) {
@@ -417,8 +649,15 @@ export default {
       }
     },
 
+    startDrawPolyline() {
+      this.stopActiveDrawMode()
+      this.drawHandlers.polyline.enable()
+      this.activeDrawMode = 'polyline'
+    },
+
     stopActiveDrawMode() {
       if (this.activeDrawMode === 'draw') this.drawHandlers.polygon.disable()
+      else if (this.activeDrawMode === 'polyline') this.drawHandlers.polyline.disable()
       else if (this.activeDrawMode === 'edit') this.drawHandlers.edit.disable()
       else if (this.activeDrawMode === 'delete') this.drawHandlers.delete.disable()
       this.activeDrawMode = null

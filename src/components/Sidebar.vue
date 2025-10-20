@@ -11,6 +11,7 @@
       <div class="col">
         <AirportListSection />
         <CenterListSection />
+        <OfficeListSection />
       </div>
     </div>
   </template>
@@ -21,6 +22,7 @@
   import DrawSection        from './DrawSection.vue'
   import AirportListSection from './AirportListSection.vue'
   import CenterListSection from './CenterListSection.vue'
+  import OfficeListSection from './OfficeListSection.vue'
   </script>
   
   <style scoped>

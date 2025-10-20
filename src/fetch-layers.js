@@ -19,7 +19,7 @@ const layers = [
     }
 ]
 
-console.log("YO")
+console.log("fetching layers")
 await fs.mkdir('public/geo', { recursive: true })
 
 for (const { file, url } of layers) {
